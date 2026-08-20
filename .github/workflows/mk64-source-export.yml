@@ -1,0 +1,23 @@
+name: mk64-source-export
+
+on:
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone MK64 Dreamcast port source
+        run: |
+          git clone --depth 1 https://github.com/jnmartin84/mk64-dc.git mk64-dc
+          rm -rf mk64-dc/.git
+          tar -czf mk64-dc-source.tar.gz mk64-dc
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: mk64-dc-source
+          path: mk64-dc-source.tar.gz
+          retention-days: 1

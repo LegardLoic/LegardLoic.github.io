@@ -6,19 +6,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  export-source:
-    runs-on: ubuntu-latest
+  build-torch:
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Clone Torch recursively
+      - name: Install Torch build deps
         run: |
-          git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/HarbourMasters/torch.git torch
-          rm -rf torch/.git
-          find torch -name .git -type f -delete || true
-          tar -czf torch-source.tar.gz torch
-      - name: Upload Torch archive
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libbz2-dev
+      - name: Clone exact Torch revision used by mk64-dc
+        run: |
+          git clone https://github.com/HarbourMasters/torch.git torch
+          cd torch
+          git checkout 6a2eb921482f2eb3b3cb5b675152d6d21d1a20ff
+          git submodule update --init --recursive
+      - name: Build Torch
+        run: |
+          cmake -S torch -B torch/build -GNinja -DCMAKE_BUILD_TYPE=Release
+          cmake --build torch/build -j2
+          find torch/build -maxdepth 2 -type f -executable -name 'torch*' -print
+          cp "$(find torch/build -maxdepth 2 -type f -executable -name 'torch*' | head -1)" torch-linux
+      - name: Upload Torch binary
         uses: actions/upload-artifact@v4
         with:
-          name: torch-source
-          path: torch-source.tar.gz
+          name: torch-linux
+          path: torch-linux
           retention-days: 1

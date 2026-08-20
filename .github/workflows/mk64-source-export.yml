@@ -13,19 +13,16 @@ jobs:
       - name: Install Torch build deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libbz2-dev
-      - name: Clone exact Torch revision used by mk64-dc
+          sudo apt-get install -y cmake ninja-build libbz2-dev zlib1g-dev
+      - name: Clone current Torch recursively
         run: |
-          git clone https://github.com/HarbourMasters/torch.git torch
-          cd torch
-          git checkout 6a2eb921482f2eb3b3cb5b675152d6d21d1a20ff
-          git submodule update --init --recursive
+          git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/HarbourMasters/torch.git torch
       - name: Build Torch
         run: |
-          cmake -S torch -B torch/build -GNinja -DCMAKE_BUILD_TYPE=Release
+          cmake -S torch -B torch/build -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
           cmake --build torch/build -j2
-          find torch/build -maxdepth 2 -type f -executable -name 'torch*' -print
-          cp "$(find torch/build -maxdepth 2 -type f -executable -name 'torch*' | head -1)" torch-linux
+          find torch/build -maxdepth 3 -type f -executable -name 'torch*' -print
+          cp "$(find torch/build -maxdepth 3 -type f -executable -name 'torch*' | head -1)" torch-linux
       - name: Upload Torch binary
         uses: actions/upload-artifact@v4
         with:

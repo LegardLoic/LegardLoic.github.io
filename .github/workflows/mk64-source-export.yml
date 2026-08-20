@@ -10,14 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Clone MK64 Dreamcast port source
+      - name: Clone Torch recursively
         run: |
-          git clone --depth 1 https://github.com/jnmartin84/mk64-dc.git mk64-dc
-          rm -rf mk64-dc/.git
-          tar -czf mk64-dc-source.tar.gz mk64-dc
-      - name: Upload source archive
+          git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/HarbourMasters/torch.git torch
+          rm -rf torch/.git
+          find torch -name .git -type f -delete || true
+          tar -czf torch-source.tar.gz torch
+      - name: Upload Torch archive
         uses: actions/upload-artifact@v4
         with:
-          name: mk64-dc-source
-          path: mk64-dc-source.tar.gz
+          name: torch-source
+          path: torch-source.tar.gz
           retention-days: 1

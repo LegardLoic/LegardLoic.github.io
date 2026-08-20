@@ -1,31 +1,25 @@
 name: mk64-source-export
 
 on:
+  push:
+    branches: [ chatgpt-mk64-ncom-build ]
   pull_request:
     branches: [ master ]
   workflow_dispatch:
 
 jobs:
-  build-torch:
+  export-mk64:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install Torch build deps
+      - name: Clone official MK64 source
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libbz2-dev zlib1g-dev
-      - name: Clone current Torch recursively
-        run: |
-          git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/HarbourMasters/torch.git torch
-      - name: Build Torch
-        run: |
-          cmake -S torch -B torch/build -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
-          cmake --build torch/build -j2
-          find torch/build -maxdepth 3 -type f -executable -name 'torch*' -print
-          cp "$(find torch/build -maxdepth 3 -type f -executable -name 'torch*' | head -1)" torch-linux
-      - name: Upload Torch binary
+          git clone --depth 1 https://github.com/n64decomp/mk64.git mk64
+          rm -rf mk64/.git
+          tar -czf mk64-official-source.tar.gz mk64
+      - name: Upload official source archive
         uses: actions/upload-artifact@v4
         with:
-          name: torch-linux
-          path: torch-linux
+          name: mk64-official-source
+          path: mk64-official-source.tar.gz
           retention-days: 1
